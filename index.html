@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Little Stitches — Penjualan & Persediaan</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" data-page="dashboard">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <circle cx="22" cy="22" r="15"></circle>
+            <path d="M12 17c7-5 17-5 22 1M9 23c7-5 19-4 25 3M13 31c6-4 13-4 18 0M34 34c4 1 4 5 9 5"></path>
+            <path d="m32 10 7-5"></path>
+          </svg>
+        </span>
+        <span><strong>Little</strong><em>Stitches</em><small>handmade studio</small></span>
+      </a>
+      <div class="sidebar-label">Workspace</div>
+      <nav class="main-nav">
+        <a class="nav-link active" href="#dashboard" data-page="dashboard"><span class="nav-icon">⌂</span>Dashboard</a>
+        <a class="nav-link" href="#products" data-page="products"><span class="nav-icon">✦</span>Produk Rajut</a>
+        <a class="nav-link" href="#customers" data-page="customers"><span class="nav-icon">♧</span>Pelanggan</a>
+        <a class="nav-link" href="#sales" data-page="sales"><span class="nav-icon">▤</span>Pembayaran</a>
+        <a class="nav-link" href="#inventory" data-page="inventory"><span class="nav-icon">▦</span>Jurnal Persediaan</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="connection"><span class="pulse"></span><span><b>Supabase</b><small id="connection-text">Belum dikonfigurasi</small></span></div>
+        <button class="settings-btn" data-page="settings">⚙ <span>Konfigurasi</span></button>
+      </div>
+    </aside>
+    <main class="content">
+      <header class="topbar"><button class="mobile-menu" id="mobile-menu">☰</button><div class="crumb"><span id="greeting">Selamat datang kembali,</span><strong>Admin Little Stitches</strong></div><div class="top-actions"><span class="date" id="today"></span><button class="btn export-btn" id="export-excel" type="button" title="Ekspor semua data ke Excel">↓ <span>Ekspor Excel</span></button><div class="avatar">LS</div></div></header>
+      <div id="view"></div>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="receipt-modal" id="receipt-modal" aria-hidden="true">
+    <div class="receipt-backdrop" data-close-receipt></div>
+    <section class="receipt-dialog" role="dialog" aria-modal="true" aria-labelledby="receipt-title">
+      <div class="receipt-toolbar"><div><span class="eyebrow">Preview dokumen</span><h2 id="receipt-title">Struk pembayaran</h2></div><button class="modal-close" data-close-receipt aria-label="Tutup">×</button></div>
+      <div class="receipt-paper" id="receipt-paper"></div>
+      <div class="receipt-message">
+        <label for="receipt-message">Pesan untuk pelanggan</label>
+        <textarea id="receipt-message" rows="3" placeholder="Tulis pesan pengantar untuk pelanggan..."></textarea>
+        <small id="receipt-share-hint">Gambar struk akan dibagikan bersama pesan ini. Pilih WhatsApp dan kontak pelanggan pada menu berbagi.</small>
+      </div>
+      <div class="receipt-actions"><button class="btn light" data-close-receipt>Tutup</button><button class="btn whatsapp-btn" id="send-whatsapp">Bagikan gambar via WhatsApp</button><button class="btn" id="print-receipt">⎙ &nbsp; Cetak struk</button></div>
+    </section>
+  </div>
+  <div class="proof-modal" id="proof-modal" aria-hidden="true">
+    <div class="proof-backdrop" data-close-proof></div>
+    <section class="proof-dialog" role="dialog" aria-modal="true" aria-labelledby="proof-title">
+      <div class="proof-toolbar"><div><span class="eyebrow">Verifikasi transaksi</span><h2 id="proof-title">Bukti pembayaran</h2></div><button class="modal-close" data-close-proof aria-label="Tutup">×</button></div>
+      <div class="proof-content" id="proof-content"></div>
+      <div class="proof-actions" id="proof-actions"></div>
+    </section>
+  </div>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
