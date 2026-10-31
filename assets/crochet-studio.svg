@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" role="img" aria-labelledby="title desc">
+  <title id="title">Little Stitches crochet studio</title>
+  <desc id="desc">Illustration of colorful yarn balls, a crochet basket and flowers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#633a55"/><stop offset="1" stop-color="#ba795f"/></linearGradient>
+    <linearGradient id="basket" x1="0" x2="1"><stop stop-color="#d89a68"/><stop offset="1" stop-color="#8f563e"/></linearGradient>
+  </defs>
+  <rect width="760" height="340" rx="26" fill="url(#bg)"/>
+  <circle cx="664" cy="68" r="95" fill="#e7b08a" opacity=".18"/><circle cx="83" cy="296" r="120" fill="#3b2540" opacity=".2"/>
+  <path d="M470 39c77 20 109 55 146 119 23 39 61 74 105 93" fill="none" stroke="#f8d5b2" stroke-width="4" opacity=".5"/>
+  <path d="M521 35c-42 30-45 72-13 107 36 39 73 60 105 111" fill="none" stroke="#f4c38d" stroke-width="3" opacity=".6"/>
+  <path d="M197 175c-8-44 24-76 75-78 45-2 77 30 77 77v87H197z" fill="url(#basket)"/>
+  <path d="M185 175h177c7 0 12 6 10 13l-9 20H188l-11-20c-4-7 1-13 8-13z" fill="#e0aa79"/>
+  <path d="M211 208h126M218 231h112M226 254h96" stroke="#734535" stroke-width="5" opacity=".45"/>
+  <circle cx="234" cy="126" r="50" fill="#e78b78"/><path d="M198 124c15-37 77-37 77 13-1 35-50 47-73 17" fill="none" stroke="#f9c0a3" stroke-width="5" opacity=".8"/>
+  <circle cx="305" cy="112" r="42" fill="#8bb4a4"/><path d="M276 106c19-32 58-19 57 16-2 24-33 38-53 20" fill="none" stroke="#c6dfbd" stroke-width="5" opacity=".8"/>
+  <circle cx="130" cy="230" r="47" fill="#e6c46f"/><path d="M98 225c19-28 55-22 60 12" fill="none" stroke="#fff0b0" stroke-width="5" opacity=".8"/>
+  <path d="M455 226c24-39 49-46 78-24 19 14 29 36 38 59-35 22-81 19-116-3z" fill="#87a6a8"/>
+  <path d="M496 209c28-12 57 10 62 37M470 226c21-15 51-6 69 14" fill="none" stroke="#d3edf0" stroke-width="5" opacity=".7"/>
+  <path d="M570 263c17-44 44-50 62-29 17 20 6 51-28 58" fill="#f3bf83"/><path d="M610 204v87" stroke="#ffe0a6" stroke-width="4"/>
+  <g fill="#f5d6a5"><circle cx="93" cy="74" r="5"/><circle cx="112" cy="58" r="3"/><circle cx="636" cy="217" r="4"/><circle cx="681" cy="237" r="6"/></g>
+</svg>
