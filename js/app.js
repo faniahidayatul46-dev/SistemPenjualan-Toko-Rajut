@@ -1034,8 +1034,8 @@ function showSaleForm(sale = null) {
     delete data.payment_plan;
     data.paid_amount = paymentPlan === "full" ? data.total : Math.round(data.total / 2);
     const cart = e.target.getCart();
-    if (!cart.length || data.subtotal < 50000) {
-      notify("Minimal pembelian produk adalah Rp50.000");
+    if (!cart.length) {
+      notify("Tambahkan minimal satu produk ke keranjang");
       return;
     }
     const proofFile = formData.get("payment_proof_file");
