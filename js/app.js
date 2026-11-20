@@ -1,5 +1,7 @@
 const config = window.SUPABASE_CONFIG || {};
-const state = { products: [], customers: [], sales: [], saleItems: [], page: location.hash.slice(1) || "dashboard", customerSort: "newest", salesSort: "newest", salesCustomerFilter: "", receivableCustomerId: "" };
+const state = { products: [], customers: [], sales: [], saleItems: [], page: location.hash.slice(1) || "dashboard", customerSort: "newest", salesSort: "newest", salesCustomerFilter: "", paymentSearch: "", paymentStatusFilter: "", paymentMethodFilter: "", paymentFromDate: "", paymentToDate: "", salesPage: 1, receivableCustomerId: "" };
+const SALES_PAGE_SIZE = 10;
+const PAYMENT_DUE_DAYS = 14;
 const $ = (selector) => document.querySelector(selector);
 const rupiah = (value) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(value || 0));
 const dateText = (value) => value ? new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value)) : "—";
@@ -704,11 +706,33 @@ function salePaymentSummary(sale) {
   return { paid, outstanding: Math.max(0, total - paid), status };
 }
 
+function paymentDueLabel(sale, summary) {
+  if (summary.status === "Lunas") return "—";
+  const [year, month, day] = String(sale.sale_date || sale.created_at || "").slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return "—";
+  const dueDate = Date.UTC(year, month - 1, day + PAYMENT_DUE_DAYS);
+  const [todayYear, todayMonth, todayDay] = localIsoDate().split("-").map(Number);
+  const daysUntilDue = Math.ceil((dueDate - Date.UTC(todayYear, todayMonth - 1, todayDay)) / 86400000);
+  if (daysUntilDue < 0) return "<span class=\"pill red due-badge\">Lewat " + Math.abs(daysUntilDue) + " hari</span>";
+  const urgency = daysUntilDue <= 3 ? "orange" : "green";
+  return "<span class=\"pill " + urgency + " due-badge\">" + daysUntilDue + " hari lagi</span>";
+}
+
 function renderSales() {
   const sales = state.sales.filter((sale) => (sale.entry_type || "sale") === "sale");
-  const filteredSales = state.salesCustomerFilter
-    ? sales.filter((sale) => sale.customer_id === state.salesCustomerFilter)
-    : sales;
+  const filteredSales = sales.filter((sale) => {
+    const summary = salePaymentSummary(sale);
+    const customerName = sale.customers?.name || "";
+    const searchText = state.paymentSearch.trim().toLocaleLowerCase("id");
+    const saleDate = String(sale.sale_date || sale.created_at || "").slice(0, 10);
+    const method = String(sale.payment_method || "").toLowerCase();
+    return (!state.salesCustomerFilter || sale.customer_id === state.salesCustomerFilter) &&
+      (!searchText || String(sale.invoice_no || "").toLocaleLowerCase("id").includes(searchText) || customerName.toLocaleLowerCase("id").includes(searchText)) &&
+      (!state.paymentStatusFilter || (state.paymentStatusFilter === "paid" ? summary.status === "Lunas" : summary.status !== "Lunas")) &&
+      (!state.paymentMethodFilter || method === state.paymentMethodFilter) &&
+      (!state.paymentFromDate || saleDate >= state.paymentFromDate) &&
+      (!state.paymentToDate || saleDate <= state.paymentToDate);
+  });
   const sortedSales = [...filteredSales].sort((a, b) => {
     if (state.salesSort === "customer_asc" || state.salesSort === "customer_desc") {
       const direction = state.salesSort === "customer_asc" ? 1 : -1;
@@ -717,15 +741,40 @@ function renderSales() {
     const direction = state.salesSort === "oldest" ? 1 : -1;
     return direction * (new Date(a.sale_date || a.created_at || 0) - new Date(b.sale_date || b.created_at || 0));
   });
-  $("#view").innerHTML = `<div class="page-heading"><div><div class="eyebrow">Cash desk</div><h1>Pembayaran.</h1><p>Catat, verifikasi, dan cetak bukti pembayaran pelanggan.</p></div><div class="page-actions"><button type="button" class="btn light" data-page="journal">▤ Jurnal Umum</button><button class="btn" id="add-sale">＋ Catat pembayaran</button></div></div>${dataBanner("payments", "A LITTLE THANK-YOU", "Setiap pesanan, penuh makna.", "Pembayaran yang rapi untuk karya yang dirajut dengan cinta.")}<section class="panel"><div class="panel-head sort-panel-head"><h3>Riwayat pembayaran</h3><div class="table-controls"><span class="soft-count">${filteredSales.length} dari ${sales.length} transaksi</span><label class="sort-control"><span>Pelanggan</span><select id="sales-customer-filter" aria-label="Filter pembayaran berdasarkan pelanggan"><option value="">Semua pelanggan</option>${state.customers.slice().sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "id", { sensitivity: "base" })).map((customer) => `<option value="${customer.id}" ${state.salesCustomerFilter === customer.id ? "selected" : ""}>${escapeHtml(customer.name)}</option>`).join("")}</select></label><label class="sort-control"><span>Urutkan</span><select id="sales-sort" aria-label="Urutkan pembayaran"><option value="newest" ${state.salesSort === "newest" ? "selected" : ""}>Tanggal terbaru</option><option value="oldest" ${state.salesSort === "oldest" ? "selected" : ""}>Tanggal terlama</option><option value="customer_asc" ${state.salesSort === "customer_asc" ? "selected" : ""}>Pelanggan A–Z</option><option value="customer_desc" ${state.salesSort === "customer_desc" ? "selected" : ""}>Pelanggan Z–A</option></select></label></div></div><div class="table-wrap"><table class="sales-table"><thead><tr><th>Invoice</th><th>Pelanggan</th><th>Kanal pembelian</th><th>Tanggal</th><th>Metode</th><th>Total</th><th>Dibayar</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${sortedSales.map((s) => {const total = Number(s.total || 0);const summary = salePaymentSummary(s);const hasSettlementHistory = state.sales.some((entry) => entry.entry_type === "settlement" && entry.related_sale_id === s.id);return `<tr><td class="product-name" title="${escapeHtml(s.invoice_no)}">${escapeHtml(s.invoice_no)}</td><td title="${escapeHtml(s.customers?.name || "")}">${escapeHtml(s.customers?.name || "—")}</td><td><span class="pill ${s.sales_channel === "in_store" ? "green" : "orange"}" title="${s.sales_channel === "in_store" ? "Beli langsung di toko" : "WhatsApp / Online"}">${s.sales_channel === "in_store" ? "Beli langsung di toko" : "WhatsApp / Online"}</span></td><td>${dateText(s.sale_date)}</td><td><span class="method-dot ${s.payment_method}"></span>${s.payment_method === "qris" ? "QRIS" : "Transfer"}</td><td>${rupiah(total)}</td><td>${rupiah(summary.paid)}${summary.outstanding ? `<div class="product-sub">Sisa ${rupiah(summary.outstanding)}</div>` : ""}</td><td><span class="pill ${summary.status === "Lunas" ? "green" : summary.status.startsWith("Ditolak") ? "red" : "orange"}" title="${escapeHtml(summary.status)}">${escapeHtml(summary.status)}</span></td><td><div class="row-actions">${summary.outstanding > 0 ? `<button class="icon-btn settle" data-settle-sale="${s.id}" title="Catat pelunasan ${rupiah(summary.outstanding)}">₊</button>` : ""}${hasSettlementHistory ? "" : `<button class="icon-btn edit" data-edit-sale="${s.id}" title="Edit pembayaran">✎</button>`}<button class="icon-btn delete" data-delete-sale="${s.id}" title="Hapus pembayaran">⌫</button><button class="icon-btn print" data-print-sale="${s.id}" title="Cetak struk">⎙</button></div></td></tr>`;}).join("") || `<tr><td colspan="9" class="empty">${state.salesCustomerFilter ? "Belum ada pembayaran untuk pelanggan ini." : "Belum ada pembayaran."}</td></tr>`}</tbody></table></div></section>`;
-  $("#sales-customer-filter").onchange = (event) => {
-    state.salesCustomerFilter = event.currentTarget.value;
-    renderSales();
+  const totalPages = Math.max(1, Math.ceil(sortedSales.length / SALES_PAGE_SIZE));
+  state.salesPage = Math.min(state.salesPage, totalPages);
+  const firstPage = Math.max(1, Math.min(state.salesPage - 2, totalPages - 4));
+  const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, index) => firstPage + index);
+  const startIndex = (state.salesPage - 1) * SALES_PAGE_SIZE;
+  const paginatedSales = sortedSales.slice(startIndex, startIndex + SALES_PAGE_SIZE);
+  const pageButtons = pageNumbers.map((pageNumber) => "<button type=\"button\" class=\"pagination-btn " + (pageNumber === state.salesPage ? "active" : "") + "\" data-sales-page=\"" + pageNumber + "\" aria-current=\"" + (pageNumber === state.salesPage ? "page" : "false") + "\">" + pageNumber + "</button>").join("");
+  const paginationMarkup = "<div class=\"sales-pagination\"><span class=\"pagination-info\">Menampilkan " + (filteredSales.length ? startIndex + 1 : 0) + "–" + Math.min(startIndex + SALES_PAGE_SIZE, filteredSales.length) + " dari " + filteredSales.length + " transaksi</span><div class=\"pagination-buttons\"><button type=\"button\" class=\"pagination-btn\" data-sales-page=\"" + (state.salesPage - 1) + "\" " + (state.salesPage === 1 ? "disabled" : "") + ">Sebelumnya</button>" + pageButtons + "<button type=\"button\" class=\"pagination-btn\" data-sales-page=\"" + (state.salesPage + 1) + "\" " + (state.salesPage === totalPages ? "disabled" : "") + ">Berikutnya</button></div></div>";
+  $("#view").innerHTML = `<div class="page-heading"><div><div class="eyebrow">Cash desk</div><h1>Pembayaran.</h1><p>Catat, verifikasi, dan cetak bukti pembayaran pelanggan.</p></div><div class="page-actions"><button type="button" class="btn light" data-page="journal">▤ Jurnal Umum</button><button class="btn" id="add-sale">＋ Catat pembayaran</button></div></div>${dataBanner("payments", "A LITTLE THANK-YOU", "Setiap pesanan, penuh makna.", "Pembayaran yang rapi untuk karya yang dirajut dengan cinta.")}<section class="panel"><div class="panel-head sort-panel-head"><h3>Riwayat pembayaran</h3><div class="table-controls"><label class="sales-filter-control"><span>Cari</span><input id="sales-search" type="search" placeholder="Invoice / pelanggan" aria-label="Cari invoice atau nama pelanggan"></label><label class="sales-filter-control"><span>Status</span><select id="sales-status-filter" aria-label="Filter status pembayaran"><option value="">Semua</option><option value="paid">Lunas</option><option value="unpaid">DP terverifikasi · Belum lunas</option></select></label><label class="sales-filter-control"><span>Metode</span><select id="sales-method-filter" aria-label="Filter metode pembayaran"><option value="">Semua</option><option value="transfer">Transfer</option><option value="qris">QRIS</option><option value="cash">Cash</option></select></label><label class="sales-filter-control"><span>Dari</span><input id="sales-from-date" type="date" aria-label="Tanggal transaksi dari"></label><label class="sales-filter-control"><span>Sampai</span><input id="sales-to-date" type="date" aria-label="Tanggal transaksi sampai"></label><span class="soft-count">${filteredSales.length} dari ${sales.length} transaksi</span><label class="sort-control"><span>Pelanggan</span><select id="sales-customer-filter" aria-label="Filter pembayaran berdasarkan pelanggan"><option value="">Semua pelanggan</option>${state.customers.slice().sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "id", { sensitivity: "base" })).map((customer) => `<option value="${customer.id}" ${state.salesCustomerFilter === customer.id ? "selected" : ""}>${escapeHtml(customer.name)}</option>`).join("")}</select></label><label class="sort-control"><span>Urutkan</span><select id="sales-sort" aria-label="Urutkan pembayaran"><option value="newest" ${state.salesSort === "newest" ? "selected" : ""}>Tanggal terbaru</option><option value="oldest" ${state.salesSort === "oldest" ? "selected" : ""}>Tanggal terlama</option><option value="customer_asc" ${state.salesSort === "customer_asc" ? "selected" : ""}>Pelanggan A–Z</option><option value="customer_desc" ${state.salesSort === "customer_desc" ? "selected" : ""}>Pelanggan Z–A</option></select></label></div></div><div class="table-wrap"><table class="sales-table"><thead><tr><th>Invoice</th><th>Pelanggan</th><th>Kanal pembelian</th><th>Tanggal</th><th>Metode</th><th>Total</th><th>Dibayar</th><th>Status</th><th>Jatuh Tempo</th><th>Aksi</th></tr></thead><tbody>${paginatedSales.map((s) => {const total = Number(s.total || 0);const summary = salePaymentSummary(s);const hasSettlementHistory = state.sales.some((entry) => entry.entry_type === "settlement" && entry.related_sale_id === s.id);return `<tr><td class="product-name" title="${escapeHtml(s.invoice_no)}">${escapeHtml(s.invoice_no)}</td><td title="${escapeHtml(s.customers?.name || "")}">${escapeHtml(s.customers?.name || "—")}</td><td><span class="pill ${s.sales_channel === "in_store" ? "green" : "orange"}" title="${s.sales_channel === "in_store" ? "Beli langsung di toko" : "WhatsApp / Online"}">${s.sales_channel === "in_store" ? "Beli langsung di toko" : "WhatsApp / Online"}</span></td><td>${dateText(s.sale_date)}</td><td><span class="method-dot ${s.payment_method}"></span>${s.payment_method === "qris" ? "QRIS" : s.payment_method === "cash" ? "Cash" : "Transfer"}</td><td>${rupiah(total)}</td><td>${rupiah(summary.paid)}${summary.outstanding ? `<div class="product-sub">Sisa ${rupiah(summary.outstanding)}</div>` : ""}</td><td><span class="pill ${summary.status === "Lunas" ? "green" : summary.status.startsWith("Ditolak") ? "red" : "orange"}" title="${escapeHtml(summary.status)}">${escapeHtml(summary.status)}</span></td><td>${paymentDueLabel(s, summary)}</td><td><div class="row-actions">${summary.outstanding > 0 ? `<button class="icon-btn settle" data-settle-sale="${s.id}" title="Catat pelunasan ${rupiah(summary.outstanding)}">₊</button>` : ""}${hasSettlementHistory ? "" : `<button class="icon-btn edit" data-edit-sale="${s.id}" title="Edit pembayaran">✎</button>`}<button class="icon-btn delete" data-delete-sale="${s.id}" title="Hapus pembayaran">⌫</button><button class="icon-btn print" data-print-sale="${s.id}" title="Cetak struk">⎙</button></div></td></tr>`;}).join("") || `<tr><td colspan="10" class="empty">${filteredSales.length ? "Tidak ada transaksi yang cocok dengan pencarian atau filter." : "Belum ada transaksi pembayaran."}</td></tr>`}</tbody></table></div>${paginationMarkup}</section>`;
+  $("#sales-search").value = state.paymentSearch;
+  $("#sales-status-filter").value = state.paymentStatusFilter;
+  $("#sales-method-filter").value = state.paymentMethodFilter;
+  $("#sales-from-date").value = state.paymentFromDate;
+  $("#sales-to-date").value = state.paymentToDate;
+  const resetSalesPage = () => { state.salesPage = 1; renderSales(); };
+  $("#sales-search").oninput = (event) => {
+    state.paymentSearch = event.currentTarget.value;
+    const cursor = event.currentTarget.selectionStart;
+    resetSalesPage();
+    $("#sales-search").focus();
+    $("#sales-search").setSelectionRange(cursor, cursor);
   };
-  $("#sales-sort").onchange = (event) => {
-    state.salesSort = event.currentTarget.value;
+  $("#sales-status-filter").onchange = (event) => { state.paymentStatusFilter = event.currentTarget.value; resetSalesPage(); };
+  $("#sales-method-filter").onchange = (event) => { state.paymentMethodFilter = event.currentTarget.value; resetSalesPage(); };
+  $("#sales-from-date").onchange = (event) => { state.paymentFromDate = event.currentTarget.value; resetSalesPage(); };
+  $("#sales-to-date").onchange = (event) => { state.paymentToDate = event.currentTarget.value; resetSalesPage(); };
+  $("#sales-customer-filter").onchange = (event) => { state.salesCustomerFilter = event.currentTarget.value; resetSalesPage(); };
+  $("#sales-sort").onchange = (event) => { state.salesSort = event.currentTarget.value; resetSalesPage(); };
+  document.querySelectorAll("[data-sales-page]").forEach((button) => button.onclick = () => {
+    const pageNumber = Number(button.dataset.salesPage);
+    if (pageNumber < 1 || pageNumber > totalPages || pageNumber === state.salesPage) return;
+    state.salesPage = pageNumber;
     renderSales();
-  };
+  });
   $("#add-sale").onclick = () => showSaleForm();
   document.querySelectorAll("[data-print-sale]").forEach((button) => button.onclick = () => openReceipt(button.dataset.printSale));
   document.querySelectorAll("[data-edit-sale]").forEach((button) => button.onclick = () => showSaleForm(state.sales.find((sale) => sale.id === button.dataset.editSale)));
