@@ -134,3 +134,6 @@ body{background-color:#f8f3ec;background-image:url("assets/page-knit-pattern.svg
 #view .receivable-ledger-table td:nth-child(2){white-space:normal;overflow-wrap:anywhere}
 #view .receivable-ledger-table td:nth-child(3){white-space:nowrap}
 #view .receivable-ledger-table td.ledger-amount{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+#view .receivable-ledger-table th[rowspan="2"],#view .receivable-ledger-table thead tr:nth-child(2) th{text-align:center}
+#view .receivable-ledger-table td.ledger-amount{text-align:center}
