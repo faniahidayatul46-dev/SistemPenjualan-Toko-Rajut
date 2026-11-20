@@ -126,3 +126,14 @@ body{background-color:#f8f3ec;background-image:url("assets/page-knit-pattern.svg
 .stats-grid.dashboard-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stats-grid.dashboard-stats .stat-value{font-size:clamp(16px,2vw,25px);overflow-wrap:anywhere}
 .product-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0 24px}.shortcut-card{display:flex;align-items:center;gap:14px;min-width:0;padding:20px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);transition:.25s}.shortcut-card:hover{transform:translateY(-2px);border-color:#d6a17d}.shortcut-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:12px;background:#f6e8df;color:var(--clay);font-size:18px}.shortcut-copy{display:grid;gap:5px;flex:1;min-width:0}.shortcut-copy strong{font:700 15px Georgia,serif;color:var(--espresso)}.shortcut-copy small{color:var(--muted);font-size:11px;line-height:1.5}.shortcut-card>b{color:var(--clay);font-size:10px;white-space:nowrap}.shortcut-card>b i{font-style:normal}
 @media(max-width:560px){.stats-grid.dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stats-grid.dashboard-stats .stat-value{font-size:clamp(14px,4vw,18px)}.product-shortcuts{grid-template-columns:1fr}.shortcut-card{padding:16px}.shortcut-card>b{white-space:normal}}
+
+#view .table-wrap>.receivable-ledger-table{min-width:1120px;table-layout:auto;font-size:12px}
+#view .table-wrap>.receivable-ledger-table th,#view .table-wrap>.receivable-ledger-table td{white-space:nowrap;overflow-wrap:normal;padding:11px 10px}
+#view .receivable-ledger-table th:nth-child(1){min-width:100px}
+#view .receivable-ledger-table th:nth-child(2){min-width:230px}
+#view .receivable-ledger-table th:nth-child(3){min-width:130px}
+#view .receivable-ledger-table th:nth-child(n+4){min-width:140px}
+#view .receivable-ledger-table td:nth-child(2){white-space:normal;min-width:230px}
+#view .receivable-ledger-table td.ledger-amount{text-align:right;font-variant-numeric:tabular-nums}
+#view .receivable-ledger-table th[colspan="2"]{text-align:center}
+#view .receivable-ledger-table td.product-sub{line-height:1.5}
