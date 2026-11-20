@@ -3,7 +3,7 @@
   <h1>Little Stitches</h1>
   <p><strong>Sistem Penjualan & Persediaan Produk Rajut</strong></p>
   <p>Ruang kerja sederhana untuk mengelola karya handmade, pelanggan, pembayaran, dan persediaan.</p>
-  <p><a href="https://faniahidayatul46-dev.github.io/Sistem-Penjualan-Toko-Rajut/frontend/index.html"><strong>🧶 Buka Aplikasi Little Stitches</strong></a></p>
+  <p><a href="https://faniahidayatul46-dev.github.io/SistemPenjualan-Toko-Rajut/"><strong>🧶 Buka Aplikasi Little Stitches</strong></a></p>
 
   <p>
     <img alt="Frontend" src="https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JavaScript-8f4d6c?style=flat-square">
